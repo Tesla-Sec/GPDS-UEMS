@@ -15,8 +15,9 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: 'me', name: 'me', component: () => import('pages/PageMe.vue') }
-      // { path: '', component: () => ,import('pages/IndexPage.vue') }
+      { path: 'me', name: 'me', component: () => import('pages/PageMe.vue') },
+      { path: 'ver', name: 'ver', component: () => import('src/pages/PageVer.vue') },
+      { path: 'comentar', name: 'comentar', component: () => import('src/pages/PageComentar.vue') }
     ],
     meta: {
       requiresAuth: true

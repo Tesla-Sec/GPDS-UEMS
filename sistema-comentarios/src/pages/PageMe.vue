@@ -1,19 +1,44 @@
 <template>
   <q-page class="flex flex-center">
-    <div v-if="user">
-      <p> Hello {{ user.user_metadata.name }}</p>
+    <div class="text-center q-pa-md">
+      <!-- Título -->
+      <h1 class="text-h4 text-primary">Plataforma de feedbacks de cursos</h1>
+
+      <!-- Descrição -->
+      <p class="text-subtitle1 text-primary q-mt-sm">
+        Deixe seu feedback e nos ajude a melhorar a experiência de aprendizado
+      </p>
+
+      <!-- Botões -->
+      <div class="q-mt-lg row justify-center">
+        <q-btn
+          label="Deixe seu feedback"
+          color="accent"
+          class="q-mx-md"
+          rounded
+          to="/comentar"
+        />
+        <q-btn
+          label="Visualizar feedbacks"
+          color="primary"
+          class="q-mx-md"
+          rounded
+          to="/ver"
+        />
+      </div>
     </div>
   </q-page>
 </template>
 
 <script setup>
-import useAuthUser from 'src/composables/UseAuthUser'
-
 defineOptions({
   name: 'PageMe'
 })
 
-const { user } = useAuthUser()
-
-console.log('user data:', user)
 </script>
+
+<style>
+.text-primary {
+  color: #1e4db7; /* Azul primário para o título e descrição */
+}
+</style>

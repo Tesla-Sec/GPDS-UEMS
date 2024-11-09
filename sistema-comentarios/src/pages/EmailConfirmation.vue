@@ -1,10 +1,10 @@
 <template>
   <q-page padding>
     <p class="text-body1">
-      Thanks for registering!
+     Obrigado por registrar-se!
     </p>
     <P class="text-body1">
-      Please confirm your email to finishing registering: <strong>{{ $route.query.email }}</strong>
+      Confirme seu email para finalizar o registro: <strong>{{ $route.query.email }}</strong>
     </P>
     <div class="row justify center">
       <div class="col-md-4 col-sm-6 col-xs-10 q-gutter-y-md">

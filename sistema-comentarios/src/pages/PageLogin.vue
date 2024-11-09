@@ -1,55 +1,60 @@
 <template>
-  <q-page padding>
-    <q-form class="row justify-center" @submit.prevent="handleLogin">
-      <p class="col-12 text-h5 text-center"> Login </p>
-      <div class="col-md-4 col-sm-6 col-xs-10 q-gutter-y-md">
-        <q-input
-          label="Email"
-          v-model="form.email"
-          lazy-rules
-          :rules="[val => (val && val.length > 0) || 'Email is required!']"
-          type="email"
+  <q-page class="bg-primary">
+    <div class="row full-height">
+      <!-- Left side - Welcome section -->
+      <div class="col-6 flex flex-center column">
+        <div class="text-h3 text-white q-mb-md">Bem vindo!</div>
+        <q-btn
+          label="Criar conta"
+          color="white"
+          text-color="primary"
+          class="q-px-xl q-py-sm"
+          rounded
+          to="/register"
         />
-        <q-input
-          label="Password"
-          v-model="form.password"
-          lazy-rules
-          :rules="[val => (val && val.length > 0) || 'Password is required!']"
-        />
-        <div class="full-width q-pt-md">
+      </div>
+
+      <!-- Right side - Login form -->
+      <div class="col-6 flex flex-center">
+        <q-form class="q-gutter-y-md" style="width: 80%" @submit.prevent="handleLogin">
+          <div class="text-h3 text-white q-mb-xl">Faça seu Login</div>
+
+          <q-input
+            v-model="form.email"
+            label="E-mail"
+            filled
+            bg-color="white"
+            class="rounded-borders"
+            lazy-rules
+            :rules="[val => (val && val.length > 0) || 'Email is required!']"
+            type="email"
+          />
+
+          <q-input
+            v-model="form.password"
+            label="Senha"
+            filled
+            bg-color="white"
+            class="rounded-borders"
+            lazy-rules
+            :rules="[val => (val && val.length > 0) || 'Password is required!']"
+            type="password"
+          />
+
           <q-btn
-            label="Login"
-            color="primary"
-            class="full-width"
-            outlined
+            label="LOGIN"
+            color="white"
+            text-color="primary"
+            class="full-width q-py-sm q-mt-lg"
             rounded
             type="submit"
           />
-        </div>
-        <div class="full-width q-gutter-y-sm">
-          <q-btn
-            label="Register"
-            color="primary"
-            class="full-width"
-            flat
-            type="submit"
-            to="/register"
-            size="sm"
-          />
-          <q-btn
-            label="Forgot Password?"
-            color="primary"
-            class="full-width"
-            flat
-            type="submit"
-            :to="{ name: 'forgot-password' }"
-            size="sm"
-          />
-        </div>
+        </q-form>
       </div>
-    </q-form>
+    </div>
   </q-page>
 </template>
+
 <script setup>
 import { ref, onMounted } from 'vue'
 import useAuthUser from 'src/composables/UseAuthUser'
@@ -61,9 +66,7 @@ defineOptions({
 })
 
 const router = useRouter()
-
 const { login, isLoggedIn } = useAuthUser()
-
 const { notifyError, notifySucces } = useNotify()
 
 onMounted(() => {
@@ -87,3 +90,9 @@ const handleLogin = async () => {
   }
 }
 </script>
+
+<style scoped>
+.q-input :deep(.q-field__control) {
+  background-color: white;
+}
+</style>
