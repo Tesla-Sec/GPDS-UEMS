@@ -22,6 +22,7 @@
     "vuex": "^4.0.1"
   },
   "devDependencies": {
+    "@electron/packager": "^18.3.6",
     "@intlify/vite-plugin-vue-i18n": "^3.3.1",
     "@quasar/app-vite": "^1.9.0",
     "autoprefixer": "^10.4.2",

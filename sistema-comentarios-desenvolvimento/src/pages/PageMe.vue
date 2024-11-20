@@ -1,5 +1,5 @@
 <template>
-  <q-page class="flex flex-center">
+  <q-page class="flex flex-center bg-secondary">
     <div class="text-center q-pa-md">
       <!-- Título -->
       <h1 class="text-h4 text-primary">Plataforma de feedbacks de cursos</h1>
@@ -13,14 +13,14 @@
       <div class="q-mt-lg row justify-center">
         <q-btn
           label="Deixe seu feedback"
-          color="accent"
+          color="primary"
           class="q-mx-md"
           rounded
           to="/comentar"
         />
         <q-btn
           label="Visualizar feedbacks"
-          color="primary"
+          color="blue-7"
           class="q-mx-md"
           rounded
           to="/ver"
@@ -36,9 +36,3 @@ defineOptions({
 })
 
 </script>
-
-<style>
-.text-primary {
-  color: #1e4db7; /* Azul primário para o título e descrição */
-}
-</style>

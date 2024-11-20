@@ -53,18 +53,20 @@ defineOptions({
 
 const linksList = [
   {
-    title: 'Pagina inicial'
-    // link: 'https://chat.quasar.dev'
+    title: 'Pagina inicial',
+    icon: 'mdi-home-variant-outline',
+    routeName: 'me'
   },
   {
-    title: 'Comentar'
-    // link: 'https://chat.quasar.dev'
+    title: 'Comentar',
+    icon: 'mdi-comment-text-outline',
+    routeName: 'comentar'
   },
   {
-    title: 'Vizualizar comentarios'
-    // link: 'https://forum.quasar.dev'
+    title: 'Vizualizar comentarios',
+    icon: 'mdi-comment-eye-outline',
+    routeName: 'ver'
   }
-
 ]
 
 const leftDrawerOpen = ref(false)
