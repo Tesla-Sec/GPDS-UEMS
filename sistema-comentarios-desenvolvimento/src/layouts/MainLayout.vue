@@ -19,7 +19,7 @@
           <q-list>
             <q-item clickable v-close-popup @click="handleLogout">
               <q-item-section>
-                <q-item-label>Logout</q-item-label>
+                <q-item-label>Sair</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
@@ -77,10 +77,10 @@ const router = useRouter()
 
 const { logout } = useAuthUser()
 
-const handleLogout = async () => {
+const handleLogout = () => {
   $q.dialog({
-    title: 'Logout',
-    message: 'Do you really want to leave',
+    title: 'Sair',
+    message: 'Realmente deseja sair?',
     cancel: true,
     persistent: true
   }).onOk(async () => {

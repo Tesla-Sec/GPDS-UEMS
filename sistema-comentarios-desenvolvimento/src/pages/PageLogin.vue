@@ -22,24 +22,24 @@
         <div class="text-h3 text-primary q-mb-xl">Faça seu Login</div>
 
         <q-input
-          v-model="form.usuario"
-          label="Nome de Usuario"
+          v-model="form.email"
+          label="E-mail"
           filled
           bg-color="primary-lighten-5"
           class="rounded-borders"
           lazy-rules
-          :rules="[val => (val && val.length > 0) || 'Nome de Usuário é obrigatório!']"
+          :rules="[val => (val && val.length > 0) || 'E-mail é obrigatório!']"
         />
 
         <q-input
-          v-model="form.senha"
+          v-model="form.password"
           label="Senha"
           filled
           bg-color="primary-lighten-5"
           class="rounded-borders"
           lazy-rules
           :rules="[val => (val && val.length > 0) || 'Senha é obrigatória!']"
-          type="senha"
+          type="password"
         />
 
         <q-btn
@@ -57,7 +57,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import useApi from 'src/composables/UseApi'
+import useAuthUser from 'src/composables/UseAuthUser'
 import useNotify from 'src/composables/UseNotify'
 import { useRouter } from 'vue-router'
 
@@ -66,10 +66,8 @@ defineOptions({
 })
 
 const router = useRouter()
-const { getUserByCredentials } = useApi()
+const { login, isLoggedIn } = useAuthUser()
 const { notifyError, notifySucces } = useNotify()
-const tabelaLogin = 'login'
-const { isLoggedIn } = useApi()
 
 onMounted(() => {
   if (isLoggedIn) {
@@ -78,20 +76,15 @@ onMounted(() => {
 })
 
 const form = ref({
-  usuario: '',
-  senha: ''
+  email: '',
+  password: ''
 })
 
 const handleLogin = async () => {
   try {
-    const user = await getUserByCredentials(tabelaLogin, form.value)
-
-    if (user) {
-      notifySucces('Login realizado com Sucesso!')
-      router.push({ name: 'me' })
-    } else {
-      throw new Error('Credenciais Inválidas')
-    }
+    await login(form.value)
+    notifySucces('Login realizado com Sucesso!')
+    router.push({ name: 'me' })
   } catch (error) {
     notifyError(error.message)
   }

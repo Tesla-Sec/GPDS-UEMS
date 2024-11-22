@@ -9,6 +9,10 @@ export default function useApi () {
     return !!user.value
   }
 
+  const logout = () => {
+    user.value = null
+  }
+
   const getUserByCredentials = async (table, form) => {
     const { usuario, senha } = form
 
@@ -19,10 +23,14 @@ export default function useApi () {
       .eq('senha', senha)
 
     if (error) {
-      throw Error
+      throw new Error('Erro ao buscar usuário')
     }
 
-    return data.length > 0 ? data[0] : null
+    const foundUser = data.length > 0 ? data[0] : null
+
+    user.value = foundUser
+
+    return foundUser
   }
 
   const list = async (table) => {
@@ -76,7 +84,9 @@ export default function useApi () {
   }
 
   return {
+    user,
     isLoggedIn,
+    logout,
     getUserByCredentials,
     list,
     getById,

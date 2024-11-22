@@ -110,6 +110,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import useAuthUser from 'src/composables/UseAuthUser'
 import useApi from 'src/composables/UseApi'
 import useNotify from 'src/composables/UseNotify'
 import { useRouter } from 'vue-router'
@@ -119,6 +120,7 @@ defineOptions({
 })
 
 const router = useRouter()
+const { register } = useAuthUser()
 const { post } = useApi()
 const tabelaPessoa = 'pessoa'
 const tabelaLogin = 'login'
@@ -143,7 +145,12 @@ const isStudent = ref(true)
 
 const handleRegister = async () => {
   try {
-    // You can use isStudent.value to determine user type
+    await register({
+      email: form1.value.email,
+      password: form2.value.senha,
+      cpf: form1.value.cpf
+    })
+
     await post(tabelaPessoa, form1.value)
 
     await post(tabelaCredencial, {

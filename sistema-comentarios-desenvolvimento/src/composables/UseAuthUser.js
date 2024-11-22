@@ -30,8 +30,7 @@ export default function useAuthUser () {
     const { user, error } = await supabase.auth.signUp(
       { email, password },
       {
-        data: meta,
-        redirectTo: `${window.location.origin}/me?fromEmail=registrationConfirmation`
+        data: meta
       }
     )
     if (error) throw error
