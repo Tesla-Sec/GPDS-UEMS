@@ -33,6 +33,17 @@ export default function useApi () {
     return foundUser
   }
 
+  const getByEmailAndColumn = async (table, email, column) => {
+    const { data, error } = await supabase
+      .from(table)
+      .select(column)
+      .eq('email', email)
+
+    if (error) throw error
+
+    return data.length > 0 ? data[0][column] : null
+  }
+
   const list = async (table) => {
     const { data, error } = await supabase
       .from(table)
@@ -88,6 +99,7 @@ export default function useApi () {
     isLoggedIn,
     logout,
     getUserByCredentials,
+    getByEmailAndColumn,
     list,
     getById,
     post,

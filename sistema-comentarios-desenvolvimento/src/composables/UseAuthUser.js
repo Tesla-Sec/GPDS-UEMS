@@ -8,6 +8,7 @@ export default function useAuthUser () {
   const login = async ({ email, password }) => {
     const { user, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+
     return user
   }
 
@@ -24,6 +25,12 @@ export default function useAuthUser () {
 
   const isLoggedIn = () => {
     return !!user.value
+  }
+
+  const getUserEmail = async () => {
+    const { data, error } = await supabase.auth.getUser()
+    if (error) throw error
+    return data.user?.email || null
   }
 
   const register = async ({ email, password, ...meta }) => {
@@ -64,6 +71,7 @@ export default function useAuthUser () {
     loginWithSocialProvider,
     logout,
     isLoggedIn,
+    getUserEmail,
     register,
     update,
     sendPasswordRestEmail,

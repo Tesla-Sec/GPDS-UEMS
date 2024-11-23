@@ -4,8 +4,7 @@
       <h1 class="text-h4">Compartilhe sua experiência</h1>
 
       <p class="text-subtitle1 q-mt-sm">
-        Descreva o que aprendeu, o que gostou e o que pode ser melhorado no curso.
-        Seus comentários nos ajudarão a aprimorar a qualidade do ensino.
+        Avalie e descreva o curso. Seus comentários nos ajudarão a aprimorar a qualidade do ensino.
       </p>
 
       <!-- Grid de cards dos cursos -->
@@ -14,7 +13,7 @@
           <div v-for="course in courses"
                :key="course.id"
                class="col-12 col-sm-6"
-               @click="selectCourse(course.name)"
+               @click="selectCourse(course)"
           >
             <q-card class="cursor-pointer course-card">
               <q-img
@@ -44,14 +43,29 @@
 
             <q-card class="selected-card">
               <q-img
-                :src="getSelectedCourseImage"
+                :src="selectedCourse.image"
                 :ratio="16/9"
                 spinner-color="primary"
               >
                 <div class="absolute-bottom text-subtitle1 text-center bg-black bg-opacity-50">
-                  {{ selectedCourse }}
+                  {{ selectedCourse.name }}
                 </div>
               </q-img>
+            </q-card>
+
+            <!-- Rating -->
+            <q-card class="q-mt-md">
+              <q-card-section>
+                <div class="text-subtitle1 q-mb-sm">Avalie o curso:</div>
+                <q-rating
+                  v-model="rating"
+                  :max="5"
+                  size="2.5em"
+                  color="yellow-7"
+                  icon="star_border"
+                  icon-selected="star"
+                />
+              </q-card-section>
             </q-card>
 
             <!-- Área de texto para feedback -->
@@ -60,7 +74,7 @@
                 <q-input
                   filled
                   v-model="feedback"
-                  placeholder="Digite seu feedback aqui..."
+                  placeholder="Digite seu comentário aqui..."
                   type="textarea"
                   autogrow
                   color="primary"
@@ -74,6 +88,7 @@
               color="blue-7"
               class="full-width q-mt-lg"
               rounded
+              :disable="!rating || !feedback"
               @click="submitFeedback"
             />
           </div>
@@ -93,98 +108,112 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
+import useApi from 'src/composables/UseApi'
+import useAuthUser from 'src/composables/UseAuthUser'
+import { useQuasar } from 'quasar'
 import jsImage from '../images/javascript.jpg'
 import pythonImage from '../images/python.jpg'
 import reactImage from '../images/react.jpg'
 import devopsImage from '../images/devops.jpg'
 import flutterImage from '../images/flutter.jpg'
 
-const courses = [
-  {
-    id: 1,
-    name: 'JavaScript Full Stack Development',
-    image: jsImage
-  },
-  {
-    id: 2,
-    name: 'Python para Data Science',
-    image: pythonImage
-  },
-  {
-    id: 3,
-    name: 'React Native Mobile Development',
-    image: reactImage
-  },
-  {
-    id: 4,
-    name: 'DevOps & Cloud Computing',
-    image: devopsImage
-  },
-  {
-    id: 5,
-    name: 'Flutter Development',
-    image: flutterImage
-  }
-]
+const { list, post, getByEmailAndColumn } = useApi()
+const $q = useQuasar()
+const { getUserEmail } = useAuthUser()
 
-const selectedCourse = ref('')
+const courses = ref([])
+const selectedCourse = ref(null)
 const feedback = ref('')
+const rating = ref(0)
 
-const getSelectedCourseImage = computed(() => {
-  const course = courses.find(c => c.name === selectedCourse.value)
-  return course ? course.image : ''
-})
+const courseImages = {
+  1: jsImage,
+  2: pythonImage,
+  3: reactImage,
+  4: devopsImage,
+  5: flutterImage
+}
 
-const selectCourse = (courseName) => {
-  selectedCourse.value = courseName
+const selectCourse = (course) => {
+  selectedCourse.value = {
+    ...course,
+    image: courseImages[course.codigo] || ''
+  }
 }
 
 const unselectCourse = () => {
-  selectedCourse.value = ''
+  selectedCourse.value = null
   feedback.value = ''
+  rating.value = 0
 }
 
-const submitFeedback = () => {
-  console.log('Feedback enviado:', {
-    curso: selectedCourse.value,
-    feedback: feedback.value
-  })
-  feedback.value = ''
-  selectedCourse.value = ''
+const handleListCourses = async () => {
+  try {
+    const fetchedCourses = await list('curso')
+    courses.value = fetchedCourses.map(course => ({
+      ...course,
+      name: course.nome,
+      image: courseImages[course.codigo] || ''
+    }))
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao buscar cursos',
+      caption: error.message
+    })
+  }
 }
+
+const submitFeedback = async () => {
+  if (!selectedCourse.value || !rating.value || !feedback.value) {
+    $q.notify({
+      type: 'warning',
+      message: 'Por favor, preencha todos os campos'
+    })
+    return
+  }
+
+  try {
+    const userCpf = await getByEmailAndColumn('pessoa', await getUserEmail(), 'cpf')
+
+    const formData = {
+      nota: rating.value,
+      comentario: feedback.value,
+      curso_codigo: selectedCourse.value.codigo,
+      usuario_cpf: userCpf,
+      nivel: 1
+    }
+
+    await post('feedback', formData)
+
+    $q.notify({
+      type: 'positive',
+      message: 'Feedback enviado com sucesso!'
+    })
+
+    // Reseta o formulário
+    feedback.value = ''
+    rating.value = 0
+    selectedCourse.value = null
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao enviar feedback',
+      caption: error.message
+    })
+  }
+}
+
+// Fetch courses when component is mounted
+onMounted(handleListCourses)
 </script>
 
 <style scoped>
-.bg-primary {
-  background-color: #0077c2;
-}
-
-.text-white {
-  color: #ffffff;
-}
-
 .course-card {
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
 }
-
 .course-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-
-.selected-card {
   transform: scale(1.05);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
-}
-
-.bg-opacity-50 {
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-/* Animações de transição */
-.row {
-  transition: all 0.3s ease;
 }
 </style>

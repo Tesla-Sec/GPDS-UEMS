@@ -15,7 +15,7 @@
           <div v-for="course in courses"
                :key="course.id"
                class="col-12 col-sm-6"
-               @click="selectCourse(course.name)"
+               @click="selectCourse(course)"
           >
             <q-card class="cursor-pointer course-card">
               <q-img
@@ -45,40 +45,76 @@
 
             <q-card class="selected-card">
               <q-img
-                :src="getSelectedCourseImage"
+                :src="selectedCourse.image"
                 :ratio="16/9"
                 spinner-color="primary"
               >
                 <div class="absolute-bottom text-subtitle1 text-center bg-black bg-opacity-50">
-                  {{ selectedCourse }}
+                  {{ selectedCourse.name }}
                 </div>
               </q-img>
             </q-card>
 
             <!-- Lista de feedbacks -->
-            <q-card class="q-mt-md">
-              <q-card-section>
-                <div class="text-h6 q-mb-md">Feedbacks dos alunos</div>
+            <div v-if="courseFeedbacks.length > 0">
+              <q-card v-for="feedback in courseFeedbacks"
+                     :key="feedback.id"
+                     class="q-mt-md">
+                <q-card-section>
+                  <div class="row items-center q-mb-sm">
+                    <q-rating
+                      v-model="feedback.nota"
+                      :max="5"
+                      size="1.5em"
+                      color="yellow-7"
+                      icon="star_border"
+                      icon-selected="star"
+                      readonly
+                    />
+                    <q-space />
+                    <span class="text-caption">{{ formatDate(feedback.created_at) }}</span>
+                  </div>
 
-                <!-- Área para responder feedback -->
-                <q-input
-                  v-model="feedback"
-                  label="Responda ao feedback"
-                  type="textarea"
-                  filled
-                  autogrow
-                  class="q-mb-md"
-                />
+                  <p class="text-body1">{{ feedback.comentario }}</p>
 
-                <q-btn
-                  label="Enviar resposta"
-                  color="blue-7"
-                  class="full-width"
-                  rounded
-                  @click="submitFeedback"
-                />
-              </q-card-section>
-            </q-card>
+                  <!-- Resposta existente -->
+                  <template v-if="feedback.resposta">
+                    <q-separator class="q-my-md" />
+                    <div class="text-subtitle2 text-primary">Resposta:</div>
+                    <p class="text-body2">{{ feedback.resposta }}</p>
+                  </template>
+
+                  <!-- Formulário de resposta -->
+                  <template v-else>
+                    <q-separator class="q-my-md" />
+                    <q-input
+                      v-model="feedback.newResponse"
+                      label="Responda ao feedback"
+                      type="textarea"
+                      filled
+                      autogrow
+                      class="q-mb-md"
+                    />
+                    <q-btn
+                      label="Enviar resposta"
+                      color="blue-7"
+                      class="full-width"
+                      rounded
+                      :disable="!feedback.newResponse"
+                      @click="submitResponse(feedback)"
+                    />
+                  </template>
+                </q-card-section>
+              </q-card>
+            </div>
+
+            <div v-else class="text-center q-mt-md">
+              <q-card>
+                <q-card-section>
+                  <p class="text-subtitle1">Nenhum feedback encontrado para este curso.</p>
+                </q-card-section>
+              </q-card>
+            </div>
           </div>
         </template>
       </div>
@@ -96,97 +132,131 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
+import useApi from 'src/composables/UseApi'
+import useAuthUser from 'src/composables/UseAuthUser'
+import { useQuasar, date } from 'quasar'
 import jsImage from '../images/javascript.jpg'
 import pythonImage from '../images/python.jpg'
 import reactImage from '../images/react.jpg'
 import devopsImage from '../images/devops.jpg'
 import flutterImage from '../images/flutter.jpg'
 
-const courses = [
-  {
-    id: 1,
-    name: 'JavaScript Full Stack Development',
-    image: jsImage
-  },
-  {
-    id: 2,
-    name: 'Python para Data Science',
-    image: pythonImage
-  },
-  {
-    id: 3,
-    name: 'React Native Mobile Development',
-    image: reactImage
-  },
-  {
-    id: 4,
-    name: 'DevOps & Cloud Computing',
-    image: devopsImage
-  },
-  {
-    id: 5,
-    name: 'Flutter Development',
-    image: flutterImage
+const { list, post, update } = useApi()
+const $q = useQuasar()
+
+const courses = ref([])
+const selectedCourse = ref(null)
+const courseFeedbacks = ref([])
+
+const courseImages = {
+  1: jsImage,
+  2: pythonImage,
+  3: reactImage,
+  4: devopsImage,
+  5: flutterImage
+}
+
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  return date.formatDate(dateString, 'DD/MM/YYYY HH:mm')
+}
+
+const selectCourse = async (course) => {
+  selectedCourse.value = {
+    ...course,
+    image: courseImages[course.codigo] || ''
   }
-]
-
-const selectedCourse = ref('')
-const feedback = ref('')
-
-const getSelectedCourseImage = computed(() => {
-  const course = courses.find(c => c.name === selectedCourse.value)
-  return course ? course.image : ''
-})
-
-const selectCourse = (courseName) => {
-  selectedCourse.value = courseName
+  await loadCourseFeedbacks(course.codigo)
 }
 
 const unselectCourse = () => {
-  selectedCourse.value = ''
-  feedback.value = ''
+  selectedCourse.value = null
+  courseFeedbacks.value = []
 }
 
-const submitFeedback = () => {
-  console.log('Resposta enviada:', {
-    curso: selectedCourse.value,
-    resposta: feedback.value
-  })
-  feedback.value = ''
+const handleListCourses = async () => {
+  try {
+    const fetchedCourses = await list('curso')
+    courses.value = fetchedCourses.map(course => ({
+      ...course,
+      name: course.nome,
+      image: courseImages[course.codigo] || ''
+    }))
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao buscar cursos',
+      caption: error.message
+    })
+  }
 }
+
+const loadCourseFeedbacks = async (courseId) => {
+  try {
+    const feedbacks = await list('feedback')
+    courseFeedbacks.value = feedbacks
+      .filter(f => f.curso_codigo === courseId)
+      .map(f => ({
+        ...f,
+        newResponse: ''
+      }))
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao carregar feedbacks',
+      caption: error.message
+    })
+  }
+}
+
+const submitResponse = async (feedback) => {
+  if (!feedback.newResponse) {
+    $q.notify({
+      type: 'warning',
+      message: 'Por favor, digite uma resposta'
+    })
+    return
+  }
+
+  try {
+    await update('feedback', feedback.id, {
+      resposta: feedback.newResponse
+    })
+
+    feedback.resposta = feedback.newResponse
+    feedback.newResponse = ''
+
+    $q.notify({
+      type: 'positive',
+      message: 'Resposta enviada com sucesso!'
+    })
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao enviar resposta',
+      caption: error.message
+    })
+  }
+}
+
+// Fetch courses when component is mounted
+onMounted(handleListCourses)
 </script>
 
 <style scoped>
-.bg-primary {
-  background-color: #0077c2;
-}
-
-.text-white {
-  color: #ffffff;
-}
-
 .course-card {
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
 }
-
 .course-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  transform: scale(1.05);
 }
-
 .selected-card {
   transform: scale(1.05);
   box-shadow: 0 8px 20px rgba(0,0,0,0.3);
   transition: all 0.3s ease;
 }
-
 .bg-opacity-50 {
   background-color: rgba(0, 0, 0, 0.5);
-}
-
-/* Animações de transição */
-.row {
-  transition: all 0.3s ease;
 }
 </style>
